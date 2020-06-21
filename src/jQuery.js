@@ -1,110 +1,153 @@
-window.jQuery = (selectorOrArray) => {
+window.jQuery = (selectorOrArrayOrTemplate) => {
 	let elements
-	if (typeof selectorOrArray === 'string') {
-		elements = document.querySelectorAll(selectorOrArray)
-	} else if (selectorOrArray instanceof Array) {
-		elements = selectorOrArray
+	if (typeof selectorOrArrayOrTemplate === 'string') {
+		if (selectorOrArrayOrTemplate[0] === '<') {
+			elements = [createElement(selectorOrArrayOrTemplate)]
+		} else {
+			elements = document.querySelectorAll(selectorOrArrayOrTemplate)
+		}
+	} else if (selectorOrArrayOrTemplate instanceof Array) {
+		elements = selectorOrArrayOrTemplate
 	}
-	return {
-		// 给元素添加新的类
-		addClass(className) {
-			for (let i = 0; i < elements.length; i++) {
-				elements[i].classList.add(className)
+
+	function createElement(string) {
+		const node = document.createElement('template')
+		node.innerHTML = string.trim()
+		return node.content.firstChild
+	}
+	// 重点1
+	const api = Object.create(jQuery.prototype)
+	Object.assign(api, {
+		elements: elements,
+		oldApi: selectorOrArrayOrTemplate.oldThis,
+	})
+	return api
+}
+jQuery.prototype = {
+	construct: jQuery,
+	jquery: true,
+	// 添加为节点的子元素
+	// 默认给第一个元素添加子元素
+	append(newNode) {
+		if (newNode instanceof Element) {
+			this.get(0).appendChild(newNode)
+		} else if (newNode instanceof HTMLElement) {
+			for (let i = 0; i < newNode.length; i++) {
+				this.get(0).appendChild(newNode[i])
 			}
-			return this
-		},
-		// 查找元素
-		find(selector) {
-			let array = []
-			for (let i = 0; i < elements.length; i++) {
-				array = array.concat(Array.from(elements[i].querySelectorAll(selector)))
-			}
-			array.oldThis = this
-			return jQuery(array)
-		},
-		oldThis: selectorOrArray.oldThis,
-		// 返回到上一个this对象
-		end() {
-			return this.oldThis
-		},
-		// 遍历元素
-		each(fn) {
-			for (let i = 0; i < elements.length; i++) {
-				fn.call(null, elements[i], i)
-			}
-		},
-		// 获取父元素
-		parent() {
-			let arr = []
-			this.each((node) => {
-				if (!arr.includes(node.parentNode)) {
-					arr.push(node.parentNode)
-				}
+		} else if (newNode.jquery === true) {
+			newNode.each((node) => {
+				this.get(0).appendChild(node)
 			})
-			return jQuery(arr)
-		},
-		// 获取子元素
-		children() {
-			let arr = []
-			this.each((node) => {
-				// 使用展开运算符更方便
-				arr.push(...node.children)
-				// arr = arr.concat(Array.from(node.children))
-			})
-			return jQuery(arr)
-		},
-		// 获取兄弟节点
-		siblings() {
-			let arr = []
-			this.each((node) => {
-				for (let i = 0; i < node.parentNode.children.length; i++) {
-					Array.from(node.parentNode.children).filter((item) => {
-						if (item !== node && !arr.includes(item)) {
-							arr.push(item)
-						}
-					})
-				}
-			})
-			return jQuery(arr)
-		},
-		// 获取下一个元素
-		next() {
-			let arr = []
-			for (let i = 0; i < elements.length; i++) {
-				let sbl = elements[i].nextSibling
-				while (3 === sbl.nodeType) {
-					sbl = sbl.nextSibling
-				}
-				arr.push(sbl)
+		}
+		return this
+	},
+	// 给元素添加新的类
+	addClass(className) {
+		this.each((node) => {
+			node.classList.add(className)
+		})
+		return this
+	},
+	// 查找元素
+	find(selector) {
+		let array = []
+		// const elements = this.elements
+		// for (let i = 0; i < elements.length; i++) {
+		// 	array = array.concat(Array.from(elements[i].querySelectorAll(selector)))
+		// }
+		this.each((node) => {
+			array.push(...node.querySelectorAll(selector))
+		})
+		array.oldThis = this
+		return jQuery(array)
+	},
+	// 返回到上一个this对象
+	end() {
+		return this.oldApi
+	},
+	// 遍历元素
+	each(fn) {
+		const elements = this.elements
+		for (let i = 0; i < elements.length; i++) {
+			fn.call(null, elements[i], i)
+		}
+	},
+	// 获取父元素
+	parent() {
+		let arr = []
+		this.each((node) => {
+			if (!arr.includes(node.parentNode)) {
+				arr.push(node.parentNode)
 			}
-			return jQuery(arr)
-		},
-		// 获取上一个元素
-		previous() {
-			let arr = []
-			for (let i = 0; i < elements.length; i++) {
-				let pre = elements[i].previousSibling
-				while (3 === pre.nodeType) {
-					pre = pre.previousSibling
-				}
-				arr.push(pre)
-			}
-			return jQuery(arr)
-		},
-		// 获取元素所在位置的下标。
-		index() {
-			let indexArr = []
-			for (let i = 0; i < elements.length; i++) {
-				let pc = elements[i].parentNode.children
-				let j
-				for (j = 0; j < pc; j++) {
-					if (elements[i] === pc[j]) {
-						break
+		})
+		return jQuery(arr)
+	},
+	// 获取子元素
+	children() {
+		let arr = []
+		this.each((node) => {
+			// 使用展开运算符更方便
+			arr.push(...node.children)
+			// arr = arr.concat(Array.from(node.children))
+		})
+		return jQuery(arr)
+	},
+	// 获取兄弟节点
+	siblings() {
+		let arr = []
+		this.each((node) => {
+			for (let i = 0; i < node.parentNode.children.length; i++) {
+				Array.from(node.parentNode.children).filter((item) => {
+					if (item !== node && !arr.includes(item)) {
+						arr.push(item)
 					}
-				}
-				indexArr.push(j)
+				})
 			}
-			return indexArr
-		},
-	}
+		})
+		return jQuery(arr)
+	},
+	// 获取下一个元素
+	next() {
+		let arr = []
+		for (let i = 0; i < elements.length; i++) {
+			let sbl = elements[i].nextSibling
+			while (3 === sbl.nodeType) {
+				sbl = sbl.nextSibling
+			}
+			arr.push(sbl)
+		}
+		return jQuery(arr)
+	},
+	// 获取上一个元素
+	previous() {
+		let arr = []
+		for (let i = 0; i < elements.length; i++) {
+			let pre = elements[i].previousSibling
+			while (3 === pre.nodeType) {
+				pre = pre.previousSibling
+			}
+			arr.push(pre)
+		}
+		return jQuery(arr)
+	},
+	// 获取元素所在位置的下标。
+	index() {
+		let indexArr = []
+		for (let i = 0; i < elements.length; i++) {
+			let pc = elements[i].parentNode.children
+			let j
+			for (j = 0; j < pc; j++) {
+				if (elements[i] === pc[j]) {
+					break
+				}
+			}
+			indexArr.push(j)
+		}
+		return indexArr
+	},
+	// 获取在elements中第index个元素
+	get(index) {
+		return this.elements[index]
+	},
 }
