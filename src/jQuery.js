@@ -47,9 +47,6 @@ jQuery.prototype = {
 				this.each((node) => {
 					let temp = el
 					while (!temp.matches(selector)) {
-						console.dir(temp)
-						console.log(node.innerText)
-						debugger
 						if (temp === node) {
 							temp = null
 							break
@@ -59,7 +56,8 @@ jQuery.prototype = {
 						}
 						temp = temp.parentNode
 					}
-					temp && fn.call(el, e, el)
+
+					temp && node.contains(temp) && fn.call(el, e, el)
 				})
 			}
 			this.each((node) => {

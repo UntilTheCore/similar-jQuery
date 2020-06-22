@@ -18,4 +18,4 @@ let fn = (e) => {
 	console.log(e.target)
 }
 // jQuery('.s1').append(newNode).on('click', fn).off('click', fn)
-jQuery('.s1').append(newNode).on('click', 'span', fn).off('click', 'span', fn)
+jQuery('.s1').append(newNode).on('click', 'p', fn) //.off('click', 'span', fn)

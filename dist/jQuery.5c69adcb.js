@@ -188,10 +188,6 @@ jQuery.prototype = {
           var temp = el;
 
           while (!temp.matches(selector)) {
-            console.dir(temp);
-            console.log(node.innerText);
-            debugger;
-
             if (temp === node) {
               temp = null;
               break;
@@ -204,9 +200,8 @@ jQuery.prototype = {
             temp = temp.parentNode;
           }
 
-          temp && fn.call(el, e, el);
-        }); // el && fn.call(el, e, el)
-
+          temp && node.contains(temp) && fn.call(el, e, el);
+        });
       };
 
       this.each(function (node) {
@@ -407,7 +402,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "1839" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "6019" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
