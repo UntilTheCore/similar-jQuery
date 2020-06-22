@@ -13,6 +13,7 @@ window.jQuery = (selectorOrArrayOrTemplate) => {
 	function createElement(string) {
 		const node = document.createElement('template')
 		node.innerHTML = string.trim()
+		node.insert
 		return node.content.firstChild
 	}
 	// 重点1
@@ -26,6 +27,69 @@ window.jQuery = (selectorOrArrayOrTemplate) => {
 jQuery.prototype = {
 	construct: jQuery,
 	jquery: true,
+	delegate: {
+		userFn: null,
+		dgFn: null,
+		selector: '',
+	},
+	// 事件绑定方法
+	// 2 个参数，元素本身的事件绑定
+	// 3 个参数，事件委托
+	on(eventType, selector, fn) {
+		if (arguments.length === 3) {
+			Object.assign(this.delegate, {
+				userFn: fn,
+				dgFn: null,
+				selector: selector,
+			})
+			this.delegate.dgFn = (e) => {
+				let el = e.target
+				this.each((node) => {
+					let temp = el
+					while (!temp.matches(selector)) {
+						console.dir(temp)
+						console.log(node.innerText)
+						debugger
+						if (temp === node) {
+							temp = null
+							break
+						}
+						if (!('matches' in temp.parentNode)) {
+							break
+						}
+						temp = temp.parentNode
+					}
+					temp && fn.call(el, e, el)
+				})
+			}
+			this.each((node) => {
+				node.addEventListener(eventType, this.delegate.dgFn)
+			})
+		} else if (arguments.length === 2 && arguments[1] instanceof Function) {
+			this.each((node) => {
+				node.addEventListener(eventType, arguments[1])
+			})
+		}
+		return this
+	},
+	// 取消事件绑定
+	off(eventType, selector, fn) {
+		if (arguments.length === 3) {
+			this.each((node) => {
+				if (
+					selector === this.delegate.selector &&
+					fn === this.delegate.userFn
+				) {
+					node.removeEventListener(eventType, this.delegate.dgFn)
+				}
+			})
+		} else if (arguments.length === 2 && arguments[1] instanceof Function) {
+			this.each((node) => {
+				node.removeEventListener(eventType, arguments[1])
+			})
+		}
+		return this
+	},
 	// 添加为节点的子元素
 	// 默认给第一个元素添加子元素
 	append(newNode) {

@@ -14,4 +14,8 @@
 jQuery('.test').find('.s1').addClass('red').end().addClass('yellow')
 
 let newNode = jQuery('<span>sp1</span>')
-jQuery('.s1').append(newNode)
+let fn = (e) => {
+	console.log(e.target)
+}
+// jQuery('.s1').append(newNode).on('click', fn).off('click', fn)
+jQuery('.s1').append(newNode).on('click', 'span', fn).off('click', 'span', fn)

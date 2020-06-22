@@ -146,6 +146,7 @@ window.jQuery = function (selectorOrArrayOrTemplate) {
   function createElement(string) {
     var node = document.createElement('template');
     node.innerHTML = string.trim();
+    node.insert;
     return node.content.firstChild;
   } // 重点1
 
@@ -161,10 +162,87 @@ window.jQuery = function (selectorOrArrayOrTemplate) {
 jQuery.prototype = {
   construct: jQuery,
   jquery: true,
+  delegate: {
+    userFn: null,
+    dgFn: null,
+    selector: ''
+  },
+  // 事件绑定方法
+  // 2 个参数，元素本身的事件绑定
+  // 3 个参数，事件委托
+  on: function on(eventType, selector, fn) {
+    var _this = this,
+        _arguments = arguments;
+
+    if (arguments.length === 3) {
+      Object.assign(this.delegate, {
+        userFn: fn,
+        dgFn: null,
+        selector: selector
+      });
+
+      this.delegate.dgFn = function (e) {
+        var el = e.target;
+
+        _this.each(function (node) {
+          var temp = el;
+
+          while (!temp.matches(selector)) {
+            console.dir(temp);
+            console.log(node.innerText);
+            debugger;
+
+            if (temp === node) {
+              temp = null;
+              break;
+            }
+
+            if (!('matches' in temp.parentNode)) {
+              break;
+            }
+
+            temp = temp.parentNode;
+          }
+
+          temp && fn.call(el, e, el);
+        }); // el && fn.call(el, e, el)
+
+      };
+
+      this.each(function (node) {
+        node.addEventListener(eventType, _this.delegate.dgFn);
+      });
+    } else if (arguments.length === 2 && arguments[1] instanceof Function) {
+      this.each(function (node) {
+        node.addEventListener(eventType, _arguments[1]);
+      });
+    }
+
+    return this;
+  },
+  // 取消事件绑定
+  off: function off(eventType, selector, fn) {
+    var _this2 = this,
+        _arguments2 = arguments;
+
+    if (arguments.length === 3) {
+      this.each(function (node) {
+        if (selector === _this2.delegate.selector && fn === _this2.delegate.userFn) {
+          node.removeEventListener(eventType, _this2.delegate.dgFn);
+        }
+      });
+    } else if (arguments.length === 2 && arguments[1] instanceof Function) {
+      this.each(function (node) {
+        node.removeEventListener(eventType, _arguments2[1]);
+      });
+    }
+
+    return this;
+  },
   // 添加为节点的子元素
   // 默认给第一个元素添加子元素
   append: function append(newNode) {
-    var _this = this;
+    var _this3 = this;
 
     if (newNode instanceof Element) {
       this.get(0).appendChild(newNode);
@@ -174,7 +252,7 @@ jQuery.prototype = {
       }
     } else if (newNode.jquery === true) {
       newNode.each(function (node) {
-        _this.get(0).appendChild(node);
+        _this3.get(0).appendChild(node);
       });
     }
 
@@ -329,7 +407,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "7478" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "1839" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
